@@ -1,0 +1,580 @@
+---
+title: "Simulation as a Guide for Study Design and Inference"
+author: "John A. Graves"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    logo: vu-health-policy-logo.png
+    css: styles.css
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## First slide!
+
+```{r}
+library(tidyverse) 
+library(broom)
+library(furrr)
+library(progressr)
+library(tictoc)
+library(glue)
+library(fixest)
+library(lme4)
+library(lmerTest)
+library(janitor)
+library(glmnet)
+library(ggthemes)
+library(gganimate)
+library(gifski)
+library(av)
+
+plot_sampling_distribution <- function(x,truth) {
+    d <- density(x)
+    p_df <- as_tibble(cbind(x = d$x, density = d$y))
+    p_df %>%
+        ggplot(aes(x = x, y = density)) + geom_line() +
+        theme_few() +
+        labs(x = "Estimate", y = "Density") +
+        geom_vline(aes(xintercept = truth)) +
+        annotate("text",x = mean(x), y = min(d$y*1.1), label  = glue("  \tMean: {formatC(mean(x),digits = 3, format='f')}\n   SD: {formatC(sd(x),digits = 3, format = 'f')}"), hjust = 0)
+}
+
+plot_cis <- function(x, K, truth) {
+    res <- x %>% bind_rows(.id = "m") %>%
+        as_tibble() %>%
+        mutate(m = factor(m)) %>%
+        mutate(m = fct_reorder(m,estimate, .desc = TRUE)) %>%
+        mutate(truth = truth) %>%
+        rowwise() %>%
+        mutate(covered = as.integer(between(truth,conf.low,conf.high))) %>%
+        ungroup() %>%
+        mutate(color = ifelse(covered ==1 , "","Rejected"))
+
+    K = sample(res$m,100, replace =TRUE)
+    res %>%
+        filter(m %in% K) %>%
+        ggplot() +
+        geom_errorbar(aes(xmin =  conf.low, xmax = conf.high, y= m,colour = color)) +
+        theme_few() +
+        scale_y_discrete(breaks = NULL) +
+        geom_vline(aes(xintercept = truth)) +
+        labs(title= glue("Confidence Intervals for {prettyNum(length(K),big.mark=',')} of {prettyNum(length(res$m),big.mark=',')} Estimates"),
+             y= "Sampling Iteration",x = "Estimate",
+             subtitle= glue("{formatC(100*mean(res$covered),digits = 1, format='f')}% of confidence intervals cover the truth")) +
+        scale_colour_manual(values = c("black","red")) +
+        theme(legend.position = "none")
+}
+
+# Define a metafunction
+generate_estimate_discriminate <- function(params, generator, estimator, discriminator) {
+    plan(multisession,workers = 3)
+    with_progress({
+        res <-
+            1:M %>% map_multicore(~{
+                generator(params) %>%
+                    estimator() %>%
+                    discriminator()
+            })
+    })
+}
+
+map_multicore <- function(.x, .f, ..., .id = NULL) {
+    .f <- purrr::as_mapper(.f, ...)
+    p <- progressor(steps = length(.x))
+    f <- function(...) {
+        p()
+        .f(...)
+    }
+    furrr::future_map(.x, f, ..., .id = .id)
+}
+```
+
+## Basic Process {auto-animate="true"}
+
+1.  Define a data generation process.
+
+```{r, echo = TRUE}
+params <- list(
+  # List of parameters
+)
+dgp <- function(params) {
+    # Data generation process is a function of parameters
+}
+```
+
+## Basic Process {auto-animate="true"}
+
+1.  Define a data generation process.
+
+```{r, echo = TRUE}
+params <- list(
+  # List of parameters
+)
+dgp <- function(params) {
+    # Data generation process is a function of parameters
+}
+```
+
+2.  Define an estimator.
+
+```{r, echo = TRUE}
+estimator <- function(data) {
+  # Estimator code goes here! 
+}
+```
+
+## Basic Process {auto-animate="true"}
+
+3.  Define a discriminator function to extract the information you want (e.g., parameter estimate, confidence interval, p-value, etc.).
+
+```{r, echo = TRUE}
+discriminator <- function(model_fit) {
+  # Discriminator code goes here! 
+}
+```
+
+## Basic Process {auto-animate="true"}
+
+4.  Run all three
+
+```{r, echo = TRUE}
+estimate <- 
+  dgp(params) %>% 
+  estimator() %>% 
+  discriminator()
+```
+
+## Basic Process {auto-animate="true"}
+
+4.  Run all three ... a lot.
+
+```{r, echo = TRUE}
+M = 1000
+
+for (m in 1:M) {
+  estimate[[m]] <- 
+    dgp(params) %>% 
+    estimator() %>% 
+    discriminator()
+}
+
+```
+
+## Define a data generation process
+
+$$
+Y_i = \overbrace{\beta_0 + \beta_1 X_i + \beta_2 D}^{\text{systematic}} + \underbrace{\epsilon_{i}}_{\text{stochastic}}
+$$
+
+-   Sample size: 1,000
+-   $X_i \sim N(0,1)$
+-   Treatment probability = Pr(D=1) = 50%
+-   $\epsilon_i \sim N(0,1)$
+
+::: footer
+Learn more: [Code Animations](https://quarto.org/docs/presentations/revealjs/advanced.html#code-animations)
+:::
+
+## Define a data generation process {.smaller auto-animate="true"}
+
+::: columns
+::: {.column width="35%"}
+$$
+Y_i = 0.5 + 2 X_i + 0 D + \epsilon_{i}
+$$
+
+-   Sample size: 1,000
+
+-   $X_i \sim N(0,1)$
+
+-   Treatment probability = Pr(D=1) = 50%
+
+-   $\epsilon_i \sim N(0,1)$
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="62%"}
+``` r
+params_1 <- list(
+    N = 1000,
+    beta_0 = 0.5,
+    beta_1 = 2,
+    beta_2 = 0,
+    p_d = 0.5
+)
+
+dgp_1 <- function(params) {
+    with(params, {
+      # Code to construct a simulated dataset goes here. 
+      
+      # First Create the right-hand side 
+      
+      # Then create the outcome 
+    })
+}
+```
+:::
+:::
+
+## Define a data generation process {.smaller auto-animate="true"}
+
+::: columns
+::: {.column width="35%"}
+$$
+Y_i = 0.5 + 2 X_i + 0 D + \epsilon_{i}
+$$
+
+-   Sample size: 1,000
+
+-   $X_i \sim N(0,1)$
+
+-   Treatment probability = Pr(D=1) = 50%
+
+-   $\epsilon_i \sim N(0,1)$
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="62%"}
+``` {.r code-line-numbers="13-17|19-22"}
+params_1 <- list(
+    N = 1000,
+    beta_0 = 0.5,
+    beta_1 = 2,
+    beta_2 = 0,
+    p_d = 0.5
+)
+
+dgp_1 <- function(params) {
+    with(params, {
+        data.frame(
+        
+          # First Create the right-hand side 
+          unit_id = 1:N,
+          x_i = rnorm(N, mean = 0, sd = 1),
+          d = rbinom(N,size=1, prob = p_d),
+          epsilon = rnorm(N, mean = 0, sd = 1)) %>% 
+          
+         # Then create the outcome
+          mutate(
+            y = beta_0 + beta_1 * x_i + beta_2 * d + epsilon
+          ) %>% 
+          as_tibble()
+    })
+}
+```
+:::
+:::
+
+## Define a data generation process {.smaller auto-animate="true"}
+
+::: columns
+::: {.column width="35%"}
+$$
+Y_i = 0.5 + 2 X_i + 0 D + \epsilon_{i}
+$$
+
+-   Sample size: 1,000
+
+-   $X_i \sim N(0,1)$
+
+-   Treatment probability = Pr(D=1) = 50%
+
+-   $\epsilon_i \sim N(0,1)$
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="62%"}
+``` r
+params_1 <- list(
+    N = 1000,
+    beta_0 = 0.5,
+    beta_1 = 2,
+    beta_2 = 0,
+    p_d = 0.5
+)
+
+dgp_1 <- function(params) {
+    with(params, {
+        data.frame(
+        
+          # First Create the right-hand side 
+          unit_id = 1:N,
+          x_i = rnorm(N, mean = 0, sd = 1),
+          d = rbinom(N,size=1, prob = p_d),
+          epsilon = rnorm(N, mean = 0, sd = 1)) %>% 
+          
+         # Then create the outcome
+          mutate(
+            y = beta_0 + beta_1 * x_i + beta_2 * d + epsilon
+          ) %>% 
+          as_tibble()
+    })
+}
+```
+:::
+:::
+
+## Define a data generation process {.smaller auto-animate="true"}
+
+::: columns
+::: {.column width="35%"}
+$$
+Y_i = 0.5 + 2 X_i + 0 D + \epsilon_{i}
+$$
+
+-   Sample size: 1,000
+
+-   $X_i \sim N(0,1)$
+
+-   Treatment probability = Pr(D=1) = 50%
+
+-   $\epsilon_i \sim N(0,1)$
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="62%"}
+```{r}
+params_1 <- list(
+    N = 1000,
+    beta_0 = 0.5,
+    beta_1 = 2,
+    beta_2 = 0,
+    p_d = 0.5
+)
+
+dgp_1 <- function(params) {
+    with(params, {
+        data.frame(
+         ## Right-Hand-Side
+          unit_id = 1:N,
+          x_i = rnorm(N, mean = 0, sd = 1),
+          d = rbinom(N,size=1, prob = p_d),
+          epsilon = rnorm(N, mean = 0, sd = 1)) %>% 
+         ## Outcome
+          mutate(
+            y = beta_0 + beta_1 * x_i + beta_2 * d + epsilon
+          ) %>% 
+          as_tibble()
+    })
+}
+```
+
+```{r, echo = TRUE}
+dgp_1(params_1)
+```
+:::
+:::
+
+## Define An Estimator {auto-animate="true"}
+
+-   We'll just use ordinary least squares (`lm()` in R)
+
+```{r, echo = TRUE}
+estimator_1 <- function(df) {
+  # Estimator code goes here!
+}
+```
+
+## Define An Estimator {auto-animate="true"}
+
+-   We'll just use ordinary least squares (`lm()` in R)
+
+```{r, echo = TRUE}
+estimator_1 <- function(df) {
+  lm(y ~ x_i + d, data = df)
+}
+```
+
+## Define An Estimator {auto-animate="true"}
+
+-   We'll just use ordinary least squares (`lm()` in R)
+
+```{r, echo = TRUE}
+estimator_1 <- function(df) {
+  lm(y ~ x_i + d, data = df)
+}
+```
+
+```{r, echo = TRUE}
+fit <- 
+  dgp_1(params_1) %>% 
+  estimator_1()
+
+fit
+```
+
+## Define a discriminator function
+
+-   What do you want to get out of your estimation results?
+    -   Coefficient estimate?
+    -   P-value?
+-   Define a function to pluck it out!
+-   Let's pull out the estimated treatment coefficient $\hat \beta_2$
+
+## Define a discriminator function {auto-animate="true"}
+
+```{r, echo = TRUE}
+discriminator_fn_1a <- function(fit) {
+    fit %>%                 # Start with the fitted model. 
+    broom::tidy() %>%       # Clean up the fitted model into a data frame. 
+    filter(term=="d") %>%   # Select only the parameter of interest.
+    pull(estimate)          # Pull out only the coefficient estimate.
+}
+```
+
+## Define a discriminator function {auto-animate="true"}
+
+```{r, echo = TRUE}
+discriminator_fn_1a <- function(fit) {
+    fit %>%                 # Start with the fitted model. 
+    broom::tidy() %>%       # Clean up the fitted model into a data frame. 
+    filter(term=="d") %>%   # Select only the parameter of interest.
+    pull(estimate)          # Pull out only the coefficient estimate.
+}
+
+fit <- 
+  dgp_1(params_1) %>% 
+  estimator_1()
+summary(fit)
+```
+
+## Define a discriminator function {auto-animate="true"}
+
+```{r, echo = TRUE}
+discriminator_fn_1a <- function(fit) {
+    fit %>%                 # Start with the fitted model. 
+    broom::tidy() %>%       # Clean up the fitted model into a data frame. 
+    filter(term=="d") %>%   # Select only the parameter of interest.
+    pull(estimate)          # Pull out only the coefficient estimate.
+}
+
+fit <- 
+  dgp_1(params_1) %>% 
+  estimator_1()
+summary(fit)
+
+discriminator_fn_1a(fit)
+```
+
+## Now repeat it ... a lot. {auto-animate="true"}
+
+```{r, echo = TRUE}
+M = 1000         # How many times we're going to repeat it
+
+results <- list()    # This will collect all coefficient estimates. 
+
+for (m in 1:M) {
+    # generate, estimate, discriminate 
+}
+```
+
+## Now repeat it ... a lot. {auto-animate="true"}
+
+```{r, echo = TRUE, cache = TRUE}
+#| code-line-numbers: 7-9
+
+M = 1000  # How many times we're going to repeat it
+
+results <- list() # This is going to collect all our coefficient estimates. 
+
+for (m in 1:M) {
+  results[[m]] <- 
+    dgp_1(params_1) %>% 
+      estimator_1() %>% 
+      discriminator_fn_1a()
+}
+```
+
+## Let's take a look!
+
+::: columns
+::: {.column width="35%"}
+#### First 5 results
+
+```{r, echo = TRUE}
+head(results,5)
+```
+:::
+
+::: {.column width="65%"}
+#### Distribution of full set of results:
+
+```{r}
+plot_sampling_distribution(unlist(results), truth = params_1$beta_2) + theme(text = element_text(size=18))
+```
+:::
+:::
+
+## Consistency of an Estimator
+
+![](figures/consistency.gif){fig-align="center" width="600" height="600"}
+
+```{r, cache = TRUE, eval = FALSE}
+params_bias <- list(
+    N = 1000,
+    mu = 0,
+    sigma_sq = .8
+)
+dgp_bias <- function(params) {
+    with(params,{
+    data.frame(
+        x = rnorm(N,mu,sqrt(sigma_sq))
+    ) %>%
+    as_tibble()
+    })
+}
+
+estimator_bias <- function(df, biased = TRUE) {
+    n <- nrow(df)
+    if (biased) {
+       df %>%
+        summarise(mu = (1/n) * sum(x) + 10/n)
+    } else {
+       df %>%
+        summarise(mu = (1/n) * sum(x) )
+    }
+}
+discriminator_fn_bias <- function(fit) {
+    fit
+}
+
+consistency_biased <-
+    c(10,25,50,100,250,500,1000) %>%
+    map(~(generate_estimate_discriminate(params = modifyList(params_bias,list(N=.x)),
+                                   generator = dgp_bias,
+                                   estimator = estimator_bias,
+                                   discriminator = discriminator_fn_bias)))
+names(consistency_biased) <-  c(10,25,50,100,250,500,1000)
+
+consistency_biased %>%
+    map(~(unlist(.x) %>% data.frame() %>% setNames("estimate"))) %>%
+    bind_rows(.id = "n") %>%
+    mutate(n=as.numeric(n)) %>%
+    as_tibble() %>%
+    ggplot(aes(x= estimate))  +
+    geom_vline(aes(xintercept = 0), lty=3) +
+    geom_density() +  labs(x = "Estimate", y = "Density",title = 'N = {closest_state}') + ggthemes::theme_few() +
+    theme(plot.title = element_text(size=32)) +
+    transition_states(
+        states = n,
+        transition_length = 2,
+        state_length = 1
+    ) +
+    enter_fade() +
+    exit_shrink() +
+    ease_aes('sine-in-out')
+gganimate::save_animation(here::here("figures/consistency.gif"),animation = last_animation())
+```

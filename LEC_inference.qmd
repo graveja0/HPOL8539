@@ -1,0 +1,25 @@
+---
+title: "Statistical Inference for Policy Evaluation"
+author: "John A. Graves"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    logo: vu-health-policy-logo.png
+    css: styles.css
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+# Introduction
+
+## 
+
+## Embedded Video 1 {background-video=RegressionOmittedVariableBias.mp4 background-video-loop="true" background-video-muted="true" background-opacity=1 background-color="black"}
+
+## Included Video 2
+
+![](RegressionOmittedVariableBias.mp4)

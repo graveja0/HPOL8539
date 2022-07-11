@@ -1,0 +1,5 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/johngraves/Dropbox/teaching/HPOL8539/HPOL8539/animated-equations/media/videos/test/480p15/partial_movie_files/displayEquations/3163782288_3162332414_223132457.mp4'
+file 'file:/Users/johngraves/Dropbox/teaching/HPOL8539/HPOL8539/animated-equations/media/videos/test/480p15/partial_movie_files/displayEquations/2201830969_958405281_4077885642.mp4'
+file 'file:/Users/johngraves/Dropbox/teaching/HPOL8539/HPOL8539/animated-equations/media/videos/test/480p15/partial_movie_files/displayEquations/2201830969_676586617_1171350664.mp4'
+file 'file:/Users/johngraves/Dropbox/teaching/HPOL8539/HPOL8539/animated-equations/media/videos/test/480p15/partial_movie_files/displayEquations/2201830969_2569718023_441409621.mp4'

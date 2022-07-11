@@ -1,0 +1,4 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/johngraves/Dropbox/teaching/HPOL8539/HPOL8539/animated-equations/media/videos/example-equation/480p15/partial_movie_files/RegressionOmittedVariableBias/3163782288_3383368792_223132457.mp4'
+file 'file:/Users/johngraves/Dropbox/teaching/HPOL8539/HPOL8539/animated-equations/media/videos/example-equation/480p15/partial_movie_files/RegressionOmittedVariableBias/2201830969_2477478020_4037981352.mp4'
+file 'file:/Users/johngraves/Dropbox/teaching/HPOL8539/HPOL8539/animated-equations/media/videos/example-equation/480p15/partial_movie_files/RegressionOmittedVariableBias/2201830969_641011677_1142148181.mp4'

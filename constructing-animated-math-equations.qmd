@@ -1,0 +1,72 @@
+---
+title: "Constructing and Embedding Animated Equations in a Presentation"
+author: "John A. Graves"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    logo: vu-health-policy-logo.png
+    css: styles.css
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Constructing and Embedding Animated Equations in a Presentation
+
+- First step is to install [manim](https://www.manim.community/) 
+- Next, create a subdirectory in your project folder called ``animated-equations/``
+- [test](https://journals.sagepub.com/doi/pdf/10.1177/1536867X1301300105#:~:text=The%20correlated%20random%2Deffects%20model%20is%20fit%20in%20a%20similar,of%20the%20level%201%20variables.&text=We%20also%20fit%20a%20random,the%20correlated%20random%2Deffects%20model.)
+## Write the code
+
+This is the code in ``example-eqation.py``
+
+```r
+from manim import *
+
+class ExampleEquation(Scene):
+    def construct(self):
+        self.method_a()
+        # self.method_b()                                                                                                                                                                                                                     \
+                                                                                                                                                                                                                                               
+
+    def method_a(self):
+        eq1 = ['$Y_i$ =', '$\\beta_1 X_i + \\beta_2 D_i$', '$+ v_i$']
+        eq2 = ['$Y_i$ =', '$\\beta_1 X_i + \\beta_2 D_i$', '$+ \\mu_i + \\epsilon_i$']
+
+        t1 = VGroup(*[Tex(eq) for eq in eq1]).arrange(RIGHT, buff=0.2)
+
+        t2 = VGroup(*[Tex(eq) for eq in eq2]).arrange(RIGHT, buff=0.2)
+
+        t2.next_to(t1, DOWN)
+
+        t1[2].set_color(RED) #b                                                                                                
+
+	      t2[2].set_color(RED) #c+d                                                                                                       
+	      
+	      self.play(Write(t1), run_time=2)
+          self.play(LaggedStart(
+            TransformFromCopy(t1[0], t2[0]),
+            TransformFromCopy(t1[1], t2[1]),
+            TransformFromCopy(t1[2], t2[2]),
+            lag_ratio=0.9,
+            run_time=5,
+          ))
+          self.wait()
+```   
+
+## Create the video
+
+```r
+manim -pql example-equation.py
+```
+
+Note that the file name created will be the same as in the class 
+
+## Embedded Video 1 {background-video=animated-equations/media/videos/example-equation/480p15/ExampleEquation.mp4 background-video-loop="true" background-video-muted="true" background-opacity=1 background-color="black"}
+
+## Included Video 2
+
+![](animated-equations/media/videos/example-equation/480p15/ExampleEquation.mp4)

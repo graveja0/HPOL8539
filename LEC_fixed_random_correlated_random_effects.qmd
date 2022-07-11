@@ -1,0 +1,17 @@
+---
+title: "Fixed, Random and Correlated Random Effects"
+author: "John A. Graves"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    logo: vu-health-policy-logo.png
+    css: styles.css
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## First slide!

@@ -32,6 +32,7 @@ library(ggthemes)
 library(gganimate)
 library(gifski)
 library(av)
+library(mcreplicate)
 
 plot_sampling_distribution <- function(x,truth) {
     d <- density(x)
@@ -45,16 +46,20 @@ plot_sampling_distribution <- function(x,truth) {
 }
 
 plot_cis <- function(x, K, truth) {
-    res <- x %>% bind_rows(.id = "m") %>%
-        as_tibble() %>%
-        mutate(m = factor(m)) %>%
-        mutate(m = fct_reorder(m,estimate, .desc = TRUE)) %>%
-        mutate(truth = truth) %>%
-        rowwise() %>%
-        mutate(covered = as.integer(between(truth,conf.low,conf.high))) %>%
-        ungroup() %>%
-        mutate(color = ifelse(covered ==1 , "","Rejected"))
-
+  
+    res <- x[1,,] %>% t() %>% 
+      data.frame() %>% 
+      mutate(m = row_number()) %>% 
+      mutate(m = factor(m)) %>% 
+      as_tibble() %>% 
+      unnest(cols = c(estimate,p.value,conf.low,conf.high)) %>% 
+      mutate(m = fct_reorder(m,estimate, .desc = TRUE)) %>%
+      mutate(truth = truth) %>%
+      rowwise() %>%
+      mutate(covered = as.integer(between(truth,conf.low,conf.high))) %>%
+      ungroup() %>%
+      mutate(color = ifelse(covered ==1 , "","Rejected"))
+  
     K = sample(res$m,100, replace =TRUE)
     res %>%
         filter(m %in% K) %>%
@@ -93,6 +98,8 @@ map_multicore <- function(.x, .f, ..., .id = NULL) {
     furrr::future_map(.x, f, ..., .id = .id)
 }
 ```
+
+# Data Generation, Estimation and Discrimination
 
 ## Basic Process {auto-animate="true"}
 
@@ -510,6 +517,8 @@ head(results,5)
 :::
 
 ::: {.column width="65%"}
+
+
 #### Distribution of full set of results:
 
 ```{r}
@@ -578,3 +587,50 @@ consistency_biased %>%
     ease_aes('sine-in-out')
 gganimate::save_animation(here::here("figures/consistency.gif"),animation = last_animation())
 ```
+
+
+## Type I Error and Confidence Intervals
+
+::: columns
+::: {.column width="50%"}
+```r
+discriminator_fn_1b <- function(fit) {
+  fit %>% broom::tidy(conf.int =TRUE)  %>%
+    filter(term == "d") %>%
+    select(estimate, p.value, conf.low, conf.high)
+}
+
+res_1bc <- mc_replicate(M,
+               params_1 %>% 
+                 dgp_1() %>% 
+                 estimator_1() %>% discriminator_fn_1b(),
+               mc.cores=10) 
+
+res_1bc %>% plot_cis(truth = params_1$beta_2)
+```
+:::
+
+
+::: {.column width="50%"}
+
+```{r, echo = FALSE}
+discriminator_fn_1b <- function(fit) {
+  fit %>% broom::tidy(conf.int =TRUE)  %>%
+    filter(term == "d") %>%
+    select(estimate, p.value, conf.low, conf.high)
+}
+
+res_1bc <- mc_replicate(M,
+               params_1 %>% 
+                 dgp_1() %>% 
+                 estimator_1() %>% discriminator_fn_1b(),
+               mc.cores=10) 
+
+res_1bc %>% plot_cis(truth = params_1$beta_2)
+```
+:::
+:::
+
+# Test 1
+## Test 2 
+### Test 3

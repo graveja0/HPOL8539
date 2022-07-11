@@ -396,6 +396,11 @@
 
 </div>
 </section>
+<section>
+<section id="data-generation-estimation-and-discrimination" class="title-slide slide level1 center">
+<h1>Data Generation, Estimation and Discrimination</h1>
+
+</section>
 <section id="basic-process" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Basic Process</h2>
 <ol type="1">
@@ -633,18 +638,18 @@ Y_i = 0.5 + 2 X_i + 0 D + \epsilon_{i}
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy" data-id="quarto-animate-code"><code class="sourceCode r hljs"><span id="cb10-1" class="hljs-ln-code"><a href="#cb10-1"></a><span class="fu">dgp_1</span>(params_1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1,000 × 5
-   unit_id     x_i     d epsilon      y
-     &lt;int&gt;   &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;  &lt;dbl&gt;
- 1       1 -0.819      0  0.387  -0.752
- 2       2 -0.0338     0 -0.227   0.205
- 3       3 -1.30       1 -0.522  -2.63 
- 4       4 -0.345      1  0.0840 -0.106
- 5       5  0.171      0 -0.517   0.326
- 6       6 -1.85       0 -0.819  -4.03 
- 7       7 -2.13       1 -1.24   -5.00 
- 8       8  0.947      1  0.165   2.56 
- 9       9  0.120      0 -0.864  -0.125
-10      10  2.49       1 -0.0612  5.43 
+   unit_id    x_i     d  epsilon      y
+     &lt;int&gt;  &lt;dbl&gt; &lt;int&gt;    &lt;dbl&gt;  &lt;dbl&gt;
+ 1       1 -2.51      0 -0.967   -5.48 
+ 2       2  0.391     0 -0.501    0.781
+ 3       3  0.924     0  0.916    3.27 
+ 4       4 -0.309     0  0.465    0.348
+ 5       5  0.471     1  0.915    2.36 
+ 6       6 -0.386     0 -0.179   -0.452
+ 7       7 -0.803     0  0.260   -0.846
+ 8       8 -0.178     1  0.962    1.11 
+ 9       9 -1.21      1  0.00697 -1.90 
+10      10 -0.614     1  0.260   -0.468
 # … with 990 more rows</code></pre>
 </div>
 </div>
@@ -696,7 +701,7 @@ lm(formula = y ~ x_i + d, data = df)
 
 Coefficients:
 (Intercept)          x_i            d  
-    0.49096      2.02983     -0.02287  </code></pre>
+  0.5929706    1.9913431    0.0009423  </code></pre>
 </div>
 </div>
 </section>
@@ -743,20 +748,20 @@ Call:
 lm(formula = y ~ x_i + d, data = df)
 
 Residuals:
-    Min      1Q  Median      3Q     Max 
--3.2377 -0.6817  0.0253  0.6825  3.0149 
+     Min       1Q   Median       3Q      Max 
+-3.13430 -0.64528 -0.01177  0.64793  2.89444 
 
 Coefficients:
             Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  0.54555    0.04536  12.027   &lt;2e-16 ***
-x_i          1.95037    0.03092  63.084   &lt;2e-16 ***
-d           -0.04991    0.06444  -0.775    0.439    
+(Intercept) 0.494353   0.043100  11.470   &lt;2e-16 ***
+x_i         2.044604   0.029335  69.699   &lt;2e-16 ***
+d           0.002748   0.060593   0.045    0.964    
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 1.019 on 997 degrees of freedom
-Multiple R-squared:  0.7997,    Adjusted R-squared:  0.7993 
-F-statistic:  1990 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
+Residual standard error: 0.9569 on 997 degrees of freedom
+Multiple R-squared:   0.83, Adjusted R-squared:  0.8297 
+F-statistic:  2434 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 </div>
 </section>
@@ -781,23 +786,23 @@ lm(formula = y ~ x_i + d, data = df)
 
 Residuals:
     Min      1Q  Median      3Q     Max 
--3.3616 -0.6630  0.0149  0.6468  3.3740 
+-3.9204 -0.7044 -0.0011  0.7121  3.0079 
 
 Coefficients:
             Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  0.52918    0.04452  11.886   &lt;2e-16 ***
-x_i          1.94125    0.03089  62.838   &lt;2e-16 ***
-d           -0.10510    0.06223  -1.689   0.0915 .  
+(Intercept)  0.48945    0.04610  10.617   &lt;2e-16 ***
+x_i          2.04215    0.03223  63.357   &lt;2e-16 ***
+d            0.01858    0.06514   0.285    0.776    
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 0.9833 on 997 degrees of freedom
-Multiple R-squared:  0.7984,    Adjusted R-squared:  0.798 
-F-statistic:  1974 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
+Residual standard error: 1.029 on 997 degrees of freedom
+Multiple R-squared:  0.8011,    Adjusted R-squared:  0.8007 
+F-statistic:  2008 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="fu">discriminator_fn_1a</span>(fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] -0.1051035</code></pre>
+<pre><code>[1] 0.01858055</code></pre>
 </div>
 </div>
 </section>
@@ -872,11 +877,46 @@ F-statistic:  1974 on 2 and 997 DF,  p-value: &lt; 2.2e-16</code></pre>
 <div class="cell" data-hash="LEC_simulation_cache/revealjs/unnamed-chunk-21_f487462f96d592ded0e065f7b8e1a0ae">
 
 </div>
-<p><img src="vu-health-policy-logo.png" class="slide-logo"></p>
-<div class="footer footer-default">
+</section>
+<section id="type-i-error-and-confidence-intervals" class="slide level2">
+<h2>Type I Error and Confidence Intervals</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="sourceCode" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>discriminator_fn_1b <span class="ot">&lt;-</span> <span class="cf">function</span>(fit) {</span>
+<span id="cb28-2"><a href="#cb28-2"></a>  fit <span class="sc">%&gt;%</span> broom<span class="sc">::</span><span class="fu">tidy</span>(<span class="at">conf.int =</span><span class="cn">TRUE</span>)  <span class="sc">%&gt;%</span></span>
+<span id="cb28-3"><a href="#cb28-3"></a>    <span class="fu">filter</span>(term <span class="sc">==</span> <span class="st">"d"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb28-4"><a href="#cb28-4"></a>    <span class="fu">select</span>(estimate, p.value, conf.low, conf.high)</span>
+<span id="cb28-5"><a href="#cb28-5"></a>}</span>
+<span id="cb28-6"><a href="#cb28-6"></a></span>
+<span id="cb28-7"><a href="#cb28-7"></a>res_1bc <span class="ot">&lt;-</span> <span class="fu">mc_replicate</span>(M,</span>
+<span id="cb28-8"><a href="#cb28-8"></a>               params_1 <span class="sc">%&gt;%</span> </span>
+<span id="cb28-9"><a href="#cb28-9"></a>                 <span class="fu">dgp_1</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb28-10"><a href="#cb28-10"></a>                 <span class="fu">estimator_1</span>() <span class="sc">%&gt;%</span> <span class="fu">discriminator_fn_1b</span>(),</span>
+<span id="cb28-11"><a href="#cb28-11"></a>               <span class="at">mc.cores=</span><span class="dv">10</span>) </span>
+<span id="cb28-12"><a href="#cb28-12"></a></span>
+<span id="cb28-13"><a href="#cb28-13"></a>res_1bc <span class="sc">%&gt;%</span> <span class="fu">plot_cis</span>(<span class="at">truth =</span> params_1<span class="sc">$</span>beta_2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="cell-output-display">
+<p><img data-src="LEC_simulation_files/figure-revealjs/unnamed-chunk-22-1.png" width="960"></p>
+</div>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="test-1" class="title-slide slide level1 center">
+<h1>Test 1</h1>
+
+</section>
+<section id="test-2" class="slide level2">
+<h2>Test 2</h2>
+<h3 id="test-3">Test 3</h3>
+
+<img src="vu-health-policy-logo.png" class="slide-logo r-stretch"><div class="footer footer-default">
 
 </div>
-</section>
+</section></section>
     </div>
   </div>
 
